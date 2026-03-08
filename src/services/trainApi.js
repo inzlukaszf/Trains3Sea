@@ -5,8 +5,15 @@ import { format } from 'date-fns'
  * Public HAFAS REST API provided by Jannis R (Derhuerst).
  * Covers DB + most of Europe via Inforansport/RIS network.
  * Docs: https://v6.db.transport.rest/
+ *
+ * In the browser we route via the Vite dev-server proxy (/api → upstream)
+ * so the browser never makes a cross-origin request and CORS is avoided.
+ * In Node (tests, SSR) we hit the upstream directly.
  */
-const BASE_URL = 'https://v6.db.transport.rest'
+const BASE_URL =
+  typeof window !== 'undefined'
+    ? '/api'                           // browser → Vite proxy
+    : 'https://v6.db.transport.rest'   // Node (tests / SSR)
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
