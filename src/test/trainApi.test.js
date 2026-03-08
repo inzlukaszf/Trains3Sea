@@ -39,7 +39,7 @@ describe('searchStations', () => {
     const results = await searchStations('Warszawa')
 
     expect(results).toHaveLength(2)
-    expect(results[0]).toMatchObject({ id: '5100067', name: 'Warszawa Centralna' })
+    expect(results[0]).toMatchObject({ id: '5100065', name: 'Warszawa Centralna' })
   })
 
   it('filters out non-stop types (addresses, POIs)', async () => {
@@ -100,7 +100,7 @@ describe('findJourneys', () => {
   it('returns parsed journey objects', async () => {
     mock.onGet('/journeys').reply(200, JOURNEYS_RESPONSE)
 
-    const journeys = await findJourneys('5100067', '8103000')
+    const journeys = await findJourneys('5100065', '8103000')
 
     expect(journeys).toHaveLength(2)
     expect(journeys[0]).toHaveProperty('id', 0)
@@ -111,7 +111,7 @@ describe('findJourneys', () => {
   it('parses departure and arrival times correctly', async () => {
     mock.onGet('/journeys').reply(200, JOURNEYS_RESPONSE)
 
-    const [j] = await findJourneys('5100067', '8103000')
+    const [j] = await findJourneys('5100065', '8103000')
 
     expect(j.departure).toBe('2025-06-15T08:20:00+02:00')
     expect(j.arrival).toBe('2025-06-15T16:45:00+02:00')
@@ -120,7 +120,7 @@ describe('findJourneys', () => {
   it('computes duration in minutes', async () => {
     mock.onGet('/journeys').reply(200, JOURNEYS_RESPONSE)
 
-    const [j] = await findJourneys('5100067', '8103000')
+    const [j] = await findJourneys('5100065', '8103000')
     // 08:20 → 16:45 = 8h25min = 505 min
     expect(j.durationMin).toBe(505)
   })
@@ -128,7 +128,7 @@ describe('findJourneys', () => {
   it('identifies transfer stops for multi-leg journey', async () => {
     mock.onGet('/journeys').reply(200, JOURNEYS_RESPONSE)
 
-    const journeys = await findJourneys('5100067', '8103000')
+    const journeys = await findJourneys('5100065', '8103000')
     const twoLeg = journeys[1]
 
     expect(twoLeg.transferStops).toHaveLength(1)
@@ -138,7 +138,7 @@ describe('findJourneys', () => {
   it('parses stopovers inside a leg', async () => {
     mock.onGet('/journeys').reply(200, JOURNEYS_RESPONSE)
 
-    const [direct] = await findJourneys('5100067', '8103000')
+    const [direct] = await findJourneys('5100065', '8103000')
     const leg = direct.legs[0]
 
     expect(leg.stopovers).toHaveLength(1)
@@ -148,7 +148,7 @@ describe('findJourneys', () => {
   it('parses leg line name and product', async () => {
     mock.onGet('/journeys').reply(200, JOURNEYS_RESPONSE)
 
-    const [direct] = await findJourneys('5100067', '8103000')
+    const [direct] = await findJourneys('5100065', '8103000')
     expect(direct.legs[0].lineName).toBe('EC 144')
     expect(direct.legs[0].lineProduct).toBe('national')
   })
@@ -156,14 +156,14 @@ describe('findJourneys', () => {
   it('includes price when present', async () => {
     mock.onGet('/journeys').reply(200, JOURNEYS_RESPONSE)
 
-    const [j] = await findJourneys('5100067', '8103000')
+    const [j] = await findJourneys('5100065', '8103000')
     expect(j.price).toEqual({ amount: 89, currency: 'EUR' })
   })
 
   it('sets price to null when absent', async () => {
     mock.onGet('/journeys').reply(200, JOURNEYS_RESPONSE)
 
-    const journeys = await findJourneys('5100067', '8103000')
+    const journeys = await findJourneys('5100065', '8103000')
     expect(journeys[1].price).toBeNull()
   })
 
@@ -173,7 +173,7 @@ describe('findJourneys', () => {
       return [200, JOURNEYS_RESPONSE]
     })
 
-    await findJourneys('5100067', '8103000', { viaIds: ['8011160'] })
+    await findJourneys('5100065', '8103000', { viaIds: ['8011160'] })
   })
 
   it('does not send via parameter when viaIds is empty', async () => {
@@ -182,7 +182,7 @@ describe('findJourneys', () => {
       return [200, JOURNEYS_RESPONSE]
     })
 
-    await findJourneys('5100067', '8103000', { viaIds: [] })
+    await findJourneys('5100065', '8103000', { viaIds: [] })
   })
 
   it('sends departure ISO string parameter', async () => {
@@ -193,32 +193,32 @@ describe('findJourneys', () => {
       return [200, JOURNEYS_RESPONSE_EMPTY]
     })
 
-    await findJourneys('5100067', '8103000', { departure: dep })
+    await findJourneys('5100065', '8103000', { departure: dep })
   })
 
   it('returns empty array when no journeys found', async () => {
     mock.onGet('/journeys').reply(200, JOURNEYS_RESPONSE_EMPTY)
 
-    const journeys = await findJourneys('5100067', '8103000')
+    const journeys = await findJourneys('5100065', '8103000')
     expect(journeys).toEqual([])
   })
 
   it('sets origin/destination coords from location data', async () => {
     mock.onGet('/journeys').reply(200, JOURNEYS_RESPONSE)
 
-    const [j] = await findJourneys('5100067', '8103000')
-    expect(j.legs[0].origin.coords).toEqual([52.2297, 21.0122])
+    const [j] = await findJourneys('5100065', '8103000')
+    expect(j.legs[0].origin.coords).toEqual([52.2289, 21.0036])
     expect(j.legs[0].destination.coords).toEqual([48.1851, 16.376])
   })
 
   it('propagates HTTP 503 service unavailable', async () => {
     mock.onGet('/journeys').reply(503)
-    await expect(findJourneys('5100067', '8103000')).rejects.toThrow()
+    await expect(findJourneys('5100065', '8103000')).rejects.toThrow()
   })
 
   it('propagates timeout errors', async () => {
     mock.onGet('/journeys').timeout()
-    await expect(findJourneys('5100067', '8103000')).rejects.toThrow()
+    await expect(findJourneys('5100065', '8103000')).rejects.toThrow()
   })
 
   it('uses results param in request', async () => {
@@ -227,7 +227,7 @@ describe('findJourneys', () => {
       return [200, JOURNEYS_RESPONSE_EMPTY]
     })
 
-    await findJourneys('5100067', '8103000', { results: 10 })
+    await findJourneys('5100065', '8103000', { results: 10 })
   })
 })
 

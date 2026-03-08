@@ -1,19 +1,19 @@
 import { describe, it, expect } from 'vitest'
 import { EU_RAIL_GRAPH, computeAutoVia } from '../data/routeGraph'
 
-// HAFAS IDs for convenience
-const VIENNA     = '8103000'
-const SOFIA      = '5500010'
-const ZAGREB     = '7870041'
-const PRAGUE     = '5400001'
-const TALLINN    = '7700001'
-const BUDAPEST   = '5510009'
-const RIGA       = '7600001'
-const VILNIUS    = '7600010'
-const WARSAW     = '5100067'
-const BUCHAREST  = '5310034'
-const BRATISLAVA = '5600020'
-const LJUBLJANA  = '7940200'
+// HAFAS IDs — verified against https://v6.db.transport.rest/stops/<id>
+const VIENNA     = '8103000'   // Wien Hbf
+const SOFIA      = '5200004'   // Sofia
+const ZAGREB     = '7800020'   // Zagreb Glavni kolodvor
+const PRAGUE     = '5496001'   // Praha (HAFAS group)
+const TALLINN    = '2600080'   // Tallinn Balti jaam
+const BUDAPEST   = '5500003'   // Budapest-Keleti
+const RIGA       = '2500009'   // Riga Pass
+const VILNIUS    = '2400008'   // Vilnius(LT)
+const WARSAW     = '5100065'   // Warszawa Centralna
+const BUCHAREST  = '5300007'   // Bucuresti Nord Gara A
+const BRATISLAVA = '5600207'   // Bratislava hl.st.
+const LJUBLJANA  = '7900003'   // Ljubljana
 
 // ═══════════════════════════════════════════════════════════════════════════
 // EU_RAIL_GRAPH structure

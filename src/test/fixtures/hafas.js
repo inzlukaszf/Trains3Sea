@@ -4,9 +4,9 @@
 
 export const STATION_WARSAW = {
   type: 'stop',
-  id: '5100067',
+  id: '5100065',
   name: 'Warszawa Centralna',
-  location: { type: 'location', latitude: 52.2297, longitude: 21.0122 },
+  location: { type: 'location', latitude: 52.2289, longitude: 21.0036 },
 }
 
 export const STATION_BERLIN = {

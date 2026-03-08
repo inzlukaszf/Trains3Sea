@@ -49,7 +49,7 @@ describe('Three Seas capitals data', () => {
   it('CAPITAL_BY_NAME lookup returns correct city', () => {
     expect(CAPITAL_BY_NAME['Warszawa Centralna']).toMatchObject({
       country: 'Polska',
-      hafasId: '5100067',
+      hafasId: '5100065',
     })
   })
 

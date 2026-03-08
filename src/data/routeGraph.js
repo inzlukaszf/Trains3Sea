@@ -12,21 +12,23 @@
  *  - HU ↔ BG: not adjacent (Serbia between them in non-EU territory → route via RO)
  *  - HR ↔ BG: same (Serbia between → route via HU + RO)
  *  - Any Baltic ↔ Central Europe: must go LT → PL (not via Belarus)
+ *
+ * HAFAS IDs verified against https://v6.db.transport.rest/stops/<id>
  */
 
 // HAFAS station IDs (same as in capitals.js)
-const VIENNA     = '8103000'   // Austria
-const SOFIA      = '5500010'   // Bulgaria
-const ZAGREB     = '7870041'   // Croatia
-const PRAGUE     = '5400001'   // Czech Republic
-const TALLINN    = '7700001'   // Estonia
-const BUDAPEST   = '5510009'   // Hungary
-const RIGA       = '7600001'   // Latvia
-const VILNIUS    = '7600010'   // Lithuania
-const WARSAW     = '5100067'   // Poland
-const BUCHAREST  = '5310034'   // Romania
-const BRATISLAVA = '5600020'   // Slovakia
-const LJUBLJANA  = '7940200'   // Slovenia
+const VIENNA     = '8103000'   // Austria      — Wien Hbf
+const SOFIA      = '5200004'   // Bulgaria     — Sofia
+const ZAGREB     = '7800020'   // Croatia      — Zagreb Glavni kolodvor
+const PRAGUE     = '5496001'   // Czech Rep.   — Praha (HAFAS group station → Praha hl.n.)
+const TALLINN    = '2600080'   // Estonia      — Tallinn Balti jaam
+const BUDAPEST   = '5500003'   // Hungary      — Budapest-Keleti
+const RIGA       = '2500009'   // Latvia       — Riga Pass (Rīgas Pasažieru stacija)
+const VILNIUS    = '2400008'   // Lithuania    — Vilnius(LT)
+const WARSAW     = '5100065'   // Poland       — Warszawa Centralna
+const BUCHAREST  = '5300007'   // Romania      — Bucuresti Nord Gara A
+const BRATISLAVA = '5600207'   // Slovakia     — Bratislava hl.st.
+const LJUBLJANA  = '7900003'   // Slovenia     — Ljubljana
 
 /**
  * Undirected EU-only rail adjacency list.

@@ -35,8 +35,8 @@ describe('buildFullPath – basic', () => {
 
   it('returns [from, to] for adjacent capitals (length 2)', () => {
     // Vienna ↔ Budapest are adjacent
-    const path = buildFullPath('8103000', '5510009')
-    expect(path).toEqual(['8103000', '5510009'])
+    const path = buildFullPath('8103000', '5500003')
+    expect(path).toEqual(['8103000', '5500003'])
   })
 
   it('path length ≥ 2 for every pair', () => {
@@ -142,10 +142,10 @@ describe('EU-only routing — non-EU countries never appear in path', () => {
   })
 
   it('HU → BG path goes via RO, never via Serbia (non-EU)', () => {
-    const BUDAPEST  = '5510009'
-    const SOFIA     = '5500010'
-    const BUCHAREST = '5310034'
-    const ZAGREB    = '7870041'
+    const BUDAPEST  = '5500003'
+    const SOFIA     = '5200004'
+    const BUCHAREST = '5300007'
+    const ZAGREB    = '7800020'
 
     const path = buildFullPath(BUDAPEST, SOFIA)
     // Must pass through Bucharest (Romania, EU)
@@ -157,10 +157,10 @@ describe('EU-only routing — non-EU countries never appear in path', () => {
   })
 
   it('Tallinn → Warsaw path avoids Russia/Belarus (goes via Riga+Vilnius)', () => {
-    const TALLINN = '7700001'
-    const RIGA    = '7600001'
-    const VILNIUS = '7600010'
-    const WARSAW  = '5100067'
+    const TALLINN = '2600080'
+    const RIGA    = '2500009'
+    const VILNIUS = '2400008'
+    const WARSAW  = '5100065'
 
     const path = buildFullPath(TALLINN, WARSAW)
     expect(path).toContain(RIGA)
@@ -266,8 +266,8 @@ describe('journeyToPolylines — route completeness (polyline start/end)', () =>
   })
 
   it('direct journey: polyline starts at departure capital', () => {
-    const WARSAW = '5100067'
-    const PRAGUE = '5400001'
+    const WARSAW = '5100065'
+    const PRAGUE = '5496001'
     const journey = makeMockJourney(WARSAW, PRAGUE)
     const polylines = journeyToPolylines(journey)
     expect(polylines.length).toBeGreaterThan(0)
@@ -276,8 +276,8 @@ describe('journeyToPolylines — route completeness (polyline start/end)', () =>
   })
 
   it('direct journey: polyline ends at destination capital', () => {
-    const WARSAW = '5100067'
-    const PRAGUE = '5400001'
+    const WARSAW = '5100065'
+    const PRAGUE = '5496001'
     const journey = makeMockJourney(WARSAW, PRAGUE)
     const polylines = journeyToPolylines(journey)
     const lastSeg = polylines[polylines.length - 1]
@@ -286,9 +286,9 @@ describe('journeyToPolylines — route completeness (polyline start/end)', () =>
   })
 
   it('multi-leg journey: first point is departure capital', () => {
-    const WARSAW  = '5100067'
+    const WARSAW  = '5100065'
     const VIENNA  = '8103000'
-    const BRATISLAVA = cap('5600020')
+    const BRATISLAVA = cap('5600207')
     const journey = makeMockJourney(WARSAW, VIENNA, BRATISLAVA)
     const polylines = journeyToPolylines(journey)
     const firstPoint = polylines[0].points[0]
@@ -296,9 +296,9 @@ describe('journeyToPolylines — route completeness (polyline start/end)', () =>
   })
 
   it('multi-leg journey: last point is destination capital', () => {
-    const WARSAW  = '5100067'
+    const WARSAW  = '5100065'
     const VIENNA  = '8103000'
-    const BRATISLAVA = cap('5600020')
+    const BRATISLAVA = cap('5600207')
     const journey = makeMockJourney(WARSAW, VIENNA, BRATISLAVA)
     const polylines = journeyToPolylines(journey)
     const lastSeg = polylines[polylines.length - 1]
@@ -307,9 +307,9 @@ describe('journeyToPolylines — route completeness (polyline start/end)', () =>
   })
 
   it('intermediate capital is the last point of first leg', () => {
-    const WARSAW  = '5100067'
+    const WARSAW  = '5100065'
     const VIENNA  = '8103000'
-    const BRATISLAVA = cap('5600020')
+    const BRATISLAVA = cap('5600207')
     const journey = makeMockJourney(WARSAW, VIENNA, BRATISLAVA)
     const polylines = journeyToPolylines(journey)
     const firstLegLastPoint = polylines[0].points[polylines[0].points.length - 1]
@@ -317,8 +317,8 @@ describe('journeyToPolylines — route completeness (polyline start/end)', () =>
   })
 
   it('walking legs are excluded from polylines', () => {
-    const WARSAW = '5100067'
-    const PRAGUE = '5400001'
+    const WARSAW = '5100065'
+    const PRAGUE = '5496001'
     const journey = makeMockJourney(WARSAW, PRAGUE)
     // Inject a walking leg in the middle
     journey.legs[0].isWalking = true
@@ -329,10 +329,10 @@ describe('journeyToPolylines — route completeness (polyline start/end)', () =>
   it('polylines cover all Three Seas capital pairs — each produces valid segments', () => {
     // Test a representative set of capital pairs
     const testPairs = [
-      ['5100067', '8103000'],  // Warsaw → Vienna
-      ['7700001', '5100067'],  // Tallinn → Warsaw
-      ['5500010', '8103000'],  // Sofia → Vienna
-      ['7870041', '5500010'],  // Zagreb → Sofia
+      ['5100065', '8103000'],  // Warsaw → Vienna
+      ['2600080', '5100065'],  // Tallinn → Warsaw
+      ['5200004', '8103000'],  // Sofia → Vienna
+      ['7800020', '5200004'],  // Zagreb → Sofia
     ]
     for (const [fromId, toId] of testPairs) {
       const journey = makeMockJourney(fromId, toId)
