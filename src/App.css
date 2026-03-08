@@ -145,6 +145,36 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--clr-bg)
   border-color: var(--clr-primary);
   color: #fff;
 }
+/* Auto-via: green to signal EU-routing requirement */
+.via-chip--auto {
+  border-color: #2a9d8f;
+  background: #eaf7f5;
+  color: #1a7060;
+}
+.via-chip--auto:hover { border-color: #1a7060; }
+.via-chip--auto.via-chip--active {
+  background: #2a9d8f;
+  border-color: #2a9d8f;
+  color: #fff;
+}
+.via-chip__badge {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 4px;
+  background: #2a9d8f;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.via-hint--auto {
+  color: #1a7060;
+  background: #eaf7f5;
+  border: 1px solid #b2e0da;
+  border-radius: var(--radius);
+  padding: 4px 8px;
+}
 .via-selected {
   margin-top: 6px;
   font-size: 0.78rem;

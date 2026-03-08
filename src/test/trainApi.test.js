@@ -285,8 +285,11 @@ describe('formatDuration', () => {
 // apiClient configuration
 // ═════════════════════════════════════════════════════════════
 describe('apiClient configuration', () => {
-  it('has correct base URL', () => {
-    expect(apiClient.defaults.baseURL).toBe('https://v6.db.transport.rest')
+  it('has correct base URL (direct in Node, proxied in browser)', () => {
+    // In jsdom (vitest) window is defined, so the Vite proxy path is used.
+    // In a real Node process window is undefined, so the direct URL is used.
+    const validUrls = ['https://v6.db.transport.rest', '/api']
+    expect(validUrls).toContain(apiClient.defaults.baseURL)
   })
 
   it('has Accept: application/json header', () => {

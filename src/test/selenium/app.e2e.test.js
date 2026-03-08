@@ -14,11 +14,17 @@ import { describe, it, beforeAll, afterAll, beforeEach, expect } from 'vitest'
 import { By, until } from 'selenium-webdriver'
 import { buildDriver, waitForVisible, selectOption, APP_URL } from './selenium.config.js'
 
-// ── Kapitał IDs (HAFAS) used in selects ────────────────────────────────────
-const WARSAW_ID   = '5100067'   // Polska
-const VIENNA_ID   = '8103000'   // Austria
-const PRAGUE_ID   = '5400001'   // Czechy
-const BUDAPEST_ID = '5510009'   // Węgry
+// ── Station HAFAS IDs (Three Seas capitals) ────────────────────────────────
+const WARSAW      = '5100067'   // Poland
+const VIENNA      = '8103000'   // Austria
+const PRAGUE      = '5400001'   // Czech Republic
+const BUDAPEST    = '5510009'   // Hungary
+const BRATISLAVA  = '5600020'   // Slovakia
+const TALLINN     = '7700001'   // Estonia
+const RIGA        = '7600001'   // Latvia
+const VILNIUS     = '7600010'   // Lithuania
+const SOFIA       = '5500010'   // Bulgaria
+const BUCHAREST   = '5310034'   // Romania
 
 const TIMEOUT = 20000
 
@@ -35,7 +41,6 @@ afterAll(async () => {
 
 beforeEach(async () => {
   await driver.get(APP_URL)
-  // Wait for the React app to mount (search panel must appear)
   await driver.wait(
     until.elementLocated(By.css('[data-testid="search-panel"]')),
     TIMEOUT
@@ -67,8 +72,7 @@ describe('Layout i stan początkowy', () => {
 
   it('przycisk Szukaj jest nieaktywny przy braku wyboru', async () => {
     const btn = await driver.findElement(By.css('[data-testid="search-btn"]'))
-    const disabled = await btn.getAttribute('disabled')
-    expect(disabled).not.toBeNull()
+    expect(await btn.getAttribute('disabled')).not.toBeNull()
   })
 
   it('wyświetla komunikat o pustym stanie', async () => {
@@ -88,107 +92,211 @@ describe('Layout i stan początkowy', () => {
 
 describe('Wybór stacji startowej i docelowej', () => {
   it('aktywuje przycisk Szukaj po wyborze obu stacji', async () => {
-    await selectOption(driver, '#from-select', WARSAW_ID)
-    await selectOption(driver, '#to-select', VIENNA_ID)
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', VIENNA)
 
     const btn = await driver.findElement(By.css('[data-testid="search-btn"]'))
-    const disabled = await btn.getAttribute('disabled')
-    expect(disabled).toBeNull()
+    expect(await btn.getAttribute('disabled')).toBeNull()
   })
 
   it('przycisk Szukaj pozostaje nieaktywny gdy from === to', async () => {
-    await selectOption(driver, '#from-select', WARSAW_ID)
-    await selectOption(driver, '#to-select', WARSAW_ID)
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', WARSAW)
 
     const btn = await driver.findElement(By.css('[data-testid="search-btn"]'))
-    const disabled = await btn.getAttribute('disabled')
-    expect(disabled).not.toBeNull()
+    expect(await btn.getAttribute('disabled')).not.toBeNull()
   })
 
   it('select "Skąd" zawiera wszystkie 12 stolic Trójmorza', async () => {
     const options = await driver.findElements(By.css('#from-select option'))
-    // 12 capitals + 1 placeholder
-    expect(options.length).toBeGreaterThanOrEqual(13)
+    expect(options.length).toBeGreaterThanOrEqual(13) // 12 + placeholder
   })
 
   it('po wyborze stacji select odzwierciedla wybraną wartość', async () => {
-    await selectOption(driver, '#from-select', WARSAW_ID)
-    const fromSelect = await driver.findElement(By.css('#from-select'))
-    const val = await fromSelect.getAttribute('value')
-    expect(val).toBe(WARSAW_ID)
+    await selectOption(driver, '#from-select', WARSAW)
+    const val = await driver.findElement(By.css('#from-select')).then(e => e.getAttribute('value'))
+    expect(val).toBe(WARSAW)
   })
 
   it('przycisk zamiany kierunku (⇄) zamienia stacje miejscami', async () => {
-    await selectOption(driver, '#from-select', WARSAW_ID)
-    await selectOption(driver, '#to-select', VIENNA_ID)
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', VIENNA)
 
-    const swapBtn = await driver.findElement(By.css('.swap-btn'))
-    await swapBtn.click()
-
-    await driver.sleep(200)
+    await driver.findElement(By.css('.swap-btn')).then(b => b.click())
+    await driver.sleep(300)
 
     const fromVal = await driver.findElement(By.css('#from-select')).then(e => e.getAttribute('value'))
     const toVal   = await driver.findElement(By.css('#to-select')).then(e => e.getAttribute('value'))
-    expect(fromVal).toBe(VIENNA_ID)
-    expect(toVal).toBe(WARSAW_ID)
+    expect(fromVal).toBe(VIENNA)
+    expect(toVal).toBe(WARSAW)
   })
 })
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Stacje pośrednie (via)
+// Auto-via: trasy wymagające EU-bezpiecznych przesiadek
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe('Przesiadki przez stacje pośrednie', () => {
+describe('Automatyczne przesiadki EU (auto-via)', () => {
+  it('Warszawa → Tallinn: automatycznie zaznacza Wilno i Rygę', async () => {
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', TALLINN)
+
+    await driver.sleep(300)
+
+    const vilniusChip = await driver.findElement(By.css(`[data-testid="via-chip-${VILNIUS}"]`))
+    const rigaChip    = await driver.findElement(By.css(`[data-testid="via-chip-${RIGA}"]`))
+
+    expect(await vilniusChip.getAttribute('class')).toContain('via-chip--active')
+    expect(await rigaChip.getAttribute('class')).toContain('via-chip--active')
+  })
+
+  it('Warszawa → Tallinn: chipa Wilno i Rygi mają klasę via-chip--auto', async () => {
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', TALLINN)
+    await driver.sleep(300)
+
+    const vilniusChip = await driver.findElement(By.css(`[data-testid="via-chip-${VILNIUS}"]`))
+    const rigaChip    = await driver.findElement(By.css(`[data-testid="via-chip-${RIGA}"]`))
+    expect(await vilniusChip.getAttribute('class')).toContain('via-chip--auto')
+    expect(await rigaChip.getAttribute('class')).toContain('via-chip--auto')
+  })
+
+  it('Warszawa → Tallinn: pojawia się komunikat o wymaganiu EU-tras', async () => {
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', TALLINN)
+    await driver.sleep(300)
+
+    const hint = await waitForVisible(driver, '[data-testid="auto-via-hint"]')
+    expect(await hint.isDisplayed()).toBe(true)
+  })
+
+  it('Warszawa → Tallinn: sekcja via-selected wyświetla Wilno i Rygę', async () => {
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', TALLINN)
+    await driver.sleep(300)
+
+    const summary = await waitForVisible(driver, '[data-testid="via-selected"]')
+    const text = await summary.getText()
+    expect(text).toContain('Vilnius')
+    expect(text).toContain('Riga')
+  })
+
+  it('Warszawa → Sofia: automatycznie zaznacza Bratysławę, Budapeszt i Bukareszt', async () => {
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', SOFIA)
+    await driver.sleep(300)
+
+    const braChip = await driver.findElement(By.css(`[data-testid="via-chip-${BRATISLAVA}"]`))
+    const budChip = await driver.findElement(By.css(`[data-testid="via-chip-${BUDAPEST}"]`))
+    const bucChip = await driver.findElement(By.css(`[data-testid="via-chip-${BUCHAREST}"]`))
+
+    expect(await braChip.getAttribute('class')).toContain('via-chip--active')
+    expect(await budChip.getAttribute('class')).toContain('via-chip--active')
+    expect(await bucChip.getAttribute('class')).toContain('via-chip--auto')
+  })
+
+  it('Warszawa → Praga: brak auto-via (są sąsiadami)', async () => {
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', PRAGUE)
+    await driver.sleep(300)
+
+    // No auto-via hint should appear
+    const hints = await driver.findElements(By.css('[data-testid="auto-via-hint"]'))
+    expect(hints.length).toBe(0)
+
+    // No via-selected section either
+    const selected = await driver.findElements(By.css('[data-testid="via-selected"]'))
+    expect(selected.length).toBe(0)
+  })
+
+  it('Wiedeń → Budapeszt: brak auto-via (są sąsiadami)', async () => {
+    await selectOption(driver, '#from-select', VIENNA)
+    await selectOption(driver, '#to-select', BUDAPEST)
+    await driver.sleep(300)
+
+    const hints = await driver.findElements(By.css('[data-testid="auto-via-hint"]'))
+    expect(hints.length).toBe(0)
+  })
+
+  it('po odznaczeniu auto-via chipa, chip staje się nieaktywny', async () => {
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', TALLINN)
+    await driver.sleep(300)
+
+    const vilniusChip = await driver.findElement(By.css(`[data-testid="via-chip-${VILNIUS}"]`))
+    await vilniusChip.click()
+    await driver.sleep(200)
+
+    const cls = await vilniusChip.getAttribute('class')
+    expect(cls).not.toContain('via-chip--active')
+  })
+
+  it('zmiana trasy resetuje auto-via do nowej trasy', async () => {
+    // First: Warsaw → Tallinn (via Vilnius + Riga)
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', TALLINN)
+    await driver.sleep(300)
+
+    let tallinnChips = await driver.findElements(By.css(`[data-testid="via-chip-${RIGA}"]`))
+    expect(await tallinnChips[0].getAttribute('class')).toContain('via-chip--active')
+
+    // Then change to: Warsaw → Vienna (no auto-via; Prague/Bratislava are adjacent)
+    await selectOption(driver, '#to-select', VIENNA)
+    await driver.sleep(300)
+
+    // Riga should no longer be auto-active
+    const rigaChip = await driver.findElement(By.css(`[data-testid="via-chip-${RIGA}"]`))
+    const cls = await rigaChip.getAttribute('class')
+    expect(cls).not.toContain('via-chip--auto')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Ręczne przesiadki
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('Ręczne przesiadki (manual via)', () => {
   it('wyświetla chipsy via po wyborze from i to', async () => {
-    await selectOption(driver, '#from-select', WARSAW_ID)
-    await selectOption(driver, '#to-select', VIENNA_ID)
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', VIENNA)
+    await driver.sleep(200)
 
     const chips = await driver.findElements(By.css('.via-chip'))
     expect(chips.length).toBeGreaterThanOrEqual(10)
   })
 
-  it('zaznaczenie chipa via dodaje klasę --active', async () => {
-    await selectOption(driver, '#from-select', WARSAW_ID)
-    await selectOption(driver, '#to-select', VIENNA_ID)
+  it('kliknięcie nieaktywnego chipa dodaje klasę --active', async () => {
+    // Warsaw → Prague are adjacent (no auto-via); Budapest is not auto-added
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', PRAGUE)
+    await driver.sleep(200)
 
-    const chip = await driver.findElement(By.css(`[data-testid="via-chip-${PRAGUE_ID}"]`))
+    const chip = await driver.findElement(By.css(`[data-testid="via-chip-${BUDAPEST}"]`))
     await chip.click()
+    await driver.sleep(100)
 
-    const cls = await chip.getAttribute('class')
-    expect(cls).toContain('via-chip--active')
+    expect(await chip.getAttribute('class')).toContain('via-chip--active')
   })
 
-  it('drugie kliknięcie chipa via usuwa klasę --active (toggle)', async () => {
-    await selectOption(driver, '#from-select', WARSAW_ID)
-    await selectOption(driver, '#to-select', VIENNA_ID)
+  it('drugie kliknięcie ręcznego chipa usuwa klasę --active', async () => {
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', PRAGUE)
+    await driver.sleep(200)
 
-    const chip = await driver.findElement(By.css(`[data-testid="via-chip-${PRAGUE_ID}"]`))
+    const chip = await driver.findElement(By.css(`[data-testid="via-chip-${BUDAPEST}"]`))
     await chip.click()
     await chip.click()
+    await driver.sleep(100)
 
-    const cls = await chip.getAttribute('class')
-    expect(cls).not.toContain('via-chip--active')
-  })
-
-  it('po zaznaczeniu via pojawia się sekcja "Przez:"', async () => {
-    await selectOption(driver, '#from-select', WARSAW_ID)
-    await selectOption(driver, '#to-select', VIENNA_ID)
-
-    const chip = await driver.findElement(By.css(`[data-testid="via-chip-${BUDAPEST_ID}"]`))
-    await chip.click()
-
-    const summary = await waitForVisible(driver, '.via-selected')
-    const text = await summary.getText()
-    expect(text).toContain('Budapest')
+    expect(await chip.getAttribute('class')).not.toContain('via-chip--active')
   })
 
   it('stacja startowa i docelowa nie pojawiają się wśród chipów via', async () => {
-    await selectOption(driver, '#from-select', WARSAW_ID)
-    await selectOption(driver, '#to-select', VIENNA_ID)
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', VIENNA)
 
-    const warsawChip  = await driver.findElements(By.css(`[data-testid="via-chip-${WARSAW_ID}"]`))
-    const viennaChip  = await driver.findElements(By.css(`[data-testid="via-chip-${VIENNA_ID}"]`))
-
+    const warsawChip = await driver.findElements(By.css(`[data-testid="via-chip-${WARSAW}"]`))
+    const viennaChip = await driver.findElements(By.css(`[data-testid="via-chip-${VIENNA}"]`))
     expect(warsawChip.length).toBe(0)
     expect(viennaChip.length).toBe(0)
   })
@@ -200,13 +308,10 @@ describe('Przesiadki przez stacje pośrednie', () => {
 
 describe('Wyszukiwanie połączeń kolejowych', () => {
   it('kliknięcie Szukaj pokazuje spinner ładowania', async () => {
-    await selectOption(driver, '#from-select', WARSAW_ID)
-    await selectOption(driver, '#to-select', VIENNA_ID)
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', VIENNA)
+    await driver.findElement(By.css('[data-testid="search-btn"]')).then(b => b.click())
 
-    const btn = await driver.findElement(By.css('[data-testid="search-btn"]'))
-    await btn.click()
-
-    // Spinner powinien pojawić się natychmiast (zanim API odpowie)
     try {
       const spinner = await driver.wait(
         until.elementLocated(By.css('[data-testid="loading"]')),
@@ -214,20 +319,18 @@ describe('Wyszukiwanie połączeń kolejowych', () => {
       )
       expect(await spinner.isDisplayed()).toBe(true)
     } catch {
-      // Jeśli API odpowiedziało zbyt szybko — sprawdź wyniki lub błąd
-      const results = await driver.findElements(By.css('[data-testid="connection-list"], [data-testid="error"]'))
+      const results = await driver.findElements(
+        By.css('[data-testid="connection-list"], [data-testid="error"]')
+      )
       expect(results.length).toBeGreaterThan(0)
     }
   })
 
   it('po wyszukiwaniu wyświetlana jest lista połączeń lub komunikat błędu', async () => {
-    await selectOption(driver, '#from-select', WARSAW_ID)
-    await selectOption(driver, '#to-select', VIENNA_ID)
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', VIENNA)
+    await driver.findElement(By.css('[data-testid="search-btn"]')).then(b => b.click())
 
-    const btn = await driver.findElement(By.css('[data-testid="search-btn"]'))
-    await btn.click()
-
-    // Czekaj na zakończenie ładowania (maks. 20 s)
     await driver.wait(
       until.elementLocated(By.css('[data-testid="connection-list"], [data-testid="error"]')),
       TIMEOUT
@@ -239,11 +342,10 @@ describe('Wyszukiwanie połączeń kolejowych', () => {
   }, TIMEOUT + 5000)
 
   it('kliknięcie karty połączenia otwiera szczegóły trasy', async () => {
-    await selectOption(driver, '#from-select', WARSAW_ID)
-    await selectOption(driver, '#to-select', VIENNA_ID)
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', VIENNA)
     await driver.findElement(By.css('[data-testid="search-btn"]')).then(b => b.click())
 
-    // Czekaj na wynik lub błąd API (środowisko testowe może nie mieć dostępu do internetu)
     await driver.wait(
       until.elementLocated(By.css('[data-testid="journey-card"], [data-testid="error"]')),
       TIMEOUT
@@ -251,13 +353,11 @@ describe('Wyszukiwanie połączeń kolejowych', () => {
 
     const cards = await driver.findElements(By.css('[data-testid="journey-card"]'))
     if (cards.length === 0) {
-      // API niedostępne w tym środowisku — test UI interakcji pomijamy
       const errEl = await driver.findElements(By.css('[data-testid="error"]'))
       expect(errEl.length).toBeGreaterThan(0)
       return
     }
 
-    // Kliknij drugą kartę (jeśli istnieje) lub pierwszą
     await (cards.length > 1 ? cards[1] : cards[0]).click()
 
     const detail = await driver.wait(
@@ -267,18 +367,14 @@ describe('Wyszukiwanie połączeń kolejowych', () => {
     expect(await detail.isDisplayed()).toBe(true)
   }, TIMEOUT + 5000)
 
-  it('wyszukiwanie z przesiadką przez Pragę zawiera parametr via w zapytaniu', async () => {
-    // Przechwytuj requesty przez wykonanie JS (performance.getEntries)
-    await selectOption(driver, '#from-select', WARSAW_ID)
-    await selectOption(driver, '#to-select', VIENNA_ID)
-
-    const chip = await driver.findElement(By.css(`[data-testid="via-chip-${PRAGUE_ID}"]`))
-    await chip.click()
+  it('wyszukiwanie z auto-via zawiera parametr via w zapytaniu do API', async () => {
+    // Warszawa → Tallinn forces Vilnius as auto-via
+    await selectOption(driver, '#from-select', WARSAW)
+    await selectOption(driver, '#to-select', TALLINN)
+    await driver.sleep(300)
 
     await driver.findElement(By.css('[data-testid="search-btn"]')).then(b => b.click())
-
-    // Czekaj aż zapytanie zostanie wysłane
-    await driver.sleep(1000)
+    await driver.sleep(1500)
 
     const entries = await driver.executeScript(`
       return performance.getEntriesByType('resource')
@@ -286,14 +382,15 @@ describe('Wyszukiwanie połączeń kolejowych', () => {
         .map(e => e.name)
     `)
 
-    const journeyRequests = entries.filter(url => url.includes('/api/journeys'))
-    if (journeyRequests.length > 0) {
-      const url = journeyRequests[journeyRequests.length - 1]
-      expect(url).toContain(`via=${PRAGUE_ID}`)
+    if (entries.length > 0) {
+      const url = entries[entries.length - 1]
+      // The first auto-via for Warsaw→Tallinn is Vilnius
+      expect(url).toContain(`via=${VILNIUS}`)
     } else {
-      // Jeśli performance API nie zapisało — sprawdź, że wyszukiwanie się odbyło
-      const list = await driver.findElements(By.css('[data-testid="connection-list"], [data-testid="error"]'))
-      expect(list.length).toBeGreaterThan(0)
+      const results = await driver.findElements(
+        By.css('[data-testid="connection-list"], [data-testid="error"]')
+      )
+      expect(results.length).toBeGreaterThan(0)
     }
   }, TIMEOUT + 5000)
 })
@@ -306,8 +403,7 @@ describe('Pole daty wyjazdu', () => {
   it('pole daty jest widoczne i ma domyślną wartość', async () => {
     const input = await driver.findElement(By.css('#departure-input'))
     expect(await input.isDisplayed()).toBe(true)
-    const val = await input.getAttribute('value')
-    expect(val).toBeTruthy()
+    expect(await input.getAttribute('value')).toBeTruthy()
   })
 
   it('można zmienić datę wyjazdu', async () => {
@@ -316,7 +412,6 @@ describe('Pole daty wyjazdu', () => {
       `arguments[0].value = '2025-12-24T10:00'; arguments[0].dispatchEvent(new Event('change', {bubbles:true}))`,
       input
     )
-    const val = await input.getAttribute('value')
-    expect(val).toBe('2025-12-24T10:00')
+    expect(await input.getAttribute('value')).toBe('2025-12-24T10:00')
   })
 })

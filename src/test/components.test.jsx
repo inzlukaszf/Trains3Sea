@@ -316,6 +316,63 @@ describe('SearchPanel', () => {
     )
     expect(screen.getByText(new RegExp(via.name))).toBeInTheDocument()
   })
+
+  it('auto-via chip has via-chip--auto and via-chip--active classes', () => {
+    const autoCity = THREE_SEAS_CAPITALS[3]
+    render(
+      <SearchPanel
+        {...defaultProps}
+        selectedFrom={THREE_SEAS_CAPITALS[0]}
+        selectedTo={THREE_SEAS_CAPITALS[1]}
+        viaStations={[{ id: autoCity.hafasId, name: autoCity.name, auto: true }]}
+      />
+    )
+    const chip = document.querySelector(`[data-testid="via-chip-${autoCity.hafasId}"]`)
+    expect(chip).toHaveClass('via-chip--auto')
+    expect(chip).toHaveClass('via-chip--active')
+  })
+
+  it('manual via chip does not have via-chip--auto class', () => {
+    const manualCity = THREE_SEAS_CAPITALS[3]
+    render(
+      <SearchPanel
+        {...defaultProps}
+        selectedFrom={THREE_SEAS_CAPITALS[0]}
+        selectedTo={THREE_SEAS_CAPITALS[1]}
+        viaStations={[{ id: manualCity.hafasId, name: manualCity.name, auto: false }]}
+      />
+    )
+    const chip = document.querySelector(`[data-testid="via-chip-${manualCity.hafasId}"]`)
+    expect(chip).not.toHaveClass('via-chip--auto')
+    expect(chip).toHaveClass('via-chip--active')
+  })
+
+  it('shows EU-routing hint when auto-via stations are present', () => {
+    const autoCity = THREE_SEAS_CAPITALS[3]
+    render(
+      <SearchPanel
+        {...defaultProps}
+        selectedFrom={THREE_SEAS_CAPITALS[0]}
+        selectedTo={THREE_SEAS_CAPITALS[1]}
+        viaStations={[{ id: autoCity.hafasId, name: autoCity.name, auto: true }]}
+      />
+    )
+    expect(screen.getByTestId('auto-via-hint')).toBeInTheDocument()
+  })
+
+  it('shows EU badge inside auto-via chip', () => {
+    const autoCity = THREE_SEAS_CAPITALS[3]
+    render(
+      <SearchPanel
+        {...defaultProps}
+        selectedFrom={THREE_SEAS_CAPITALS[0]}
+        selectedTo={THREE_SEAS_CAPITALS[1]}
+        viaStations={[{ id: autoCity.hafasId, name: autoCity.name, auto: true }]}
+      />
+    )
+    const chip = document.querySelector(`[data-testid="via-chip-${autoCity.hafasId}"]`)
+    expect(chip.querySelector('.via-chip__badge')).not.toBeNull()
+  })
 })
 
 // ═════════════════════════════════════════════════════════════

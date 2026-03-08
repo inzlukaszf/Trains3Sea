@@ -30,6 +30,9 @@ export default function SearchPanel({
 
   const canSearch = selectedFrom && selectedTo && selectedFrom.hafasId !== selectedTo.hafasId
 
+  const autoViaIds  = new Set(viaStations.filter((v) => v.auto).map((v) => v.id))
+  const activeViaIds = new Set(viaStations.map((v) => v.id))
+
   return (
     <div className="search-panel" data-testid="search-panel">
       <h2 className="search-panel__title">Połączenia kolejowe Trójmorza</h2>
@@ -100,29 +103,44 @@ export default function SearchPanel({
 
       {/* Via stations */}
       <div className="via-section">
-        <h4>Przesiadki przez stolice (opcjonalne)</h4>
-        <p className="via-hint">
-          Zaznacz stolice pośrednie lub kliknij znacznik na mapie.
-        </p>
+        <h4>Przesiadki przez stolice</h4>
+        {autoViaIds.size > 0 && (
+          <p className="via-hint via-hint--auto" data-testid="auto-via-hint">
+            Trasa wymaga przejazdu przez zaznaczone stolice (zielone), aby pozostać
+            w granicach Unii Europejskiej. Możesz je odznaczyć.
+          </p>
+        )}
+        {autoViaIds.size === 0 && (
+          <p className="via-hint">
+            Zaznacz stolice pośrednie lub kliknij znacznik na mapie.
+          </p>
+        )}
         <div className="via-chips">
           {availableVia.map((city) => {
-            const active = viaStations.some((v) => v.id === city.hafasId)
+            const active = activeViaIds.has(city.hafasId)
+            const isAuto = autoViaIds.has(city.hafasId)
             return (
               <button
                 key={city.hafasId}
-                className={`via-chip ${active ? 'via-chip--active' : ''}`}
+                className={[
+                  'via-chip',
+                  active ? 'via-chip--active' : '',
+                  isAuto ? 'via-chip--auto' : '',
+                ].join(' ').trim()}
                 onClick={() => onViaToggle(city)}
                 data-testid={`via-chip-${city.hafasId}`}
+                title={isAuto ? 'Automatycznie dobrana przesiadka (trasa EU)' : ''}
               >
                 {city.flag} {city.capital}
-                {active && ' ✓'}
+                {isAuto && <span className="via-chip__badge">EU</span>}
+                {active && !isAuto && ' ✓'}
               </button>
             )
           })}
         </div>
 
         {viaStations.length > 0 && (
-          <div className="via-selected">
+          <div className="via-selected" data-testid="via-selected">
             <strong>Przez:</strong>{' '}
             {viaStations.map((v) => v.name).join(' → ')}
           </div>
