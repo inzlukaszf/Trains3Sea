@@ -47,8 +47,12 @@ function MapFitter({ coords }) {
 
 /**
  * Collect all lat/lng points from a journey to draw route polylines.
+ * Exported for unit testing.
+ *
+ * @param {object|null} journey  - parsed journey object (from trainApi)
+ * @returns {{ points: number[][], lineName: string }[]}
  */
-function journeyToPolylines(journey) {
+export function journeyToPolylines(journey) {
   if (!journey) return []
   return journey.legs
     .filter((leg) => !leg.isWalking)
@@ -122,14 +126,42 @@ export default function TrainMap({
             eventHandlers={{ click: () => onCapitalClick(city) }}
           >
             <Popup>
-              <div style={{ minWidth: 160 }}>
+              <div
+                style={{ minWidth: 160 }}
+                data-testid={`popup-${city.hafasId}`}
+                data-hafas-id={city.hafasId}
+              >
                 <strong>{city.flag} {city.capital}</strong>
                 <div style={{ fontSize: 12, color: '#666' }}>{city.country}</div>
                 <div style={{ fontSize: 12 }}>{city.name}</div>
-                <div style={{ marginTop: 6, display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                  {isFrom && <span className="badge badge-from">Skąd</span>}
-                  {isTo && <span className="badge badge-to">Dokąd</span>}
-                  {isVia && <span className="badge badge-via">Przez</span>}
+                <div
+                  style={{ marginTop: 6, display: 'flex', gap: 4, flexWrap: 'wrap' }}
+                  data-testid={`badges-${city.hafasId}`}
+                >
+                  {isFrom && (
+                    <span
+                      className="badge badge-from"
+                      data-testid={`badge-from-${city.hafasId}`}
+                    >
+                      Skąd
+                    </span>
+                  )}
+                  {isTo && (
+                    <span
+                      className="badge badge-to"
+                      data-testid={`badge-to-${city.hafasId}`}
+                    >
+                      Dokąd
+                    </span>
+                  )}
+                  {isVia && (
+                    <span
+                      className="badge badge-via"
+                      data-testid={`badge-via-${city.hafasId}`}
+                    >
+                      Przez
+                    </span>
+                  )}
                 </div>
                 {!isFrom && !isTo && (
                   <button

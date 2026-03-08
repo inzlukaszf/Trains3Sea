@@ -92,3 +92,17 @@ export function computeAutoVia(fromId, toId) {
 
   return []  // no path (graph is connected, so this shouldn't happen)
 }
+
+/**
+ * Build the complete ordered route from `fromId` to `toId`, including both
+ * endpoints and all EU-safe intermediate capitals.
+ *
+ * @param {string} fromId  HAFAS station ID of the departure capital
+ * @param {string} toId    HAFAS station ID of the destination capital
+ * @returns {string[]}  [fromId, ...intermediate IDs, toId]
+ *                      (length 2 when directly adjacent, ≥3 otherwise)
+ */
+export function buildFullPath(fromId, toId) {
+  if (!fromId || !toId) return []
+  return [fromId, ...computeAutoVia(fromId, toId), toId]
+}

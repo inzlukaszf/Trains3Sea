@@ -56,7 +56,7 @@ describe('Three Seas capitals data', () => {
   it('CAPITAL_BY_HAFAS_ID lookup returns correct city', () => {
     expect(CAPITAL_BY_HAFAS_ID['8103000']).toMatchObject({
       country: 'Austria',
-      name: 'Wien',
+      name: 'Wien Hbf',
     })
   })
 
