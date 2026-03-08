@@ -22,7 +22,7 @@ const JOURNEY_DIRECT = {
       lineName: 'EC 144',
       lineProduct: 'national',
       mode: 'train',
-      origin: { id: '5100067', name: 'Warszawa Centralna', coords: [52.23, 21.01] },
+      origin: { id: '5100065', name: 'Warszawa Centralna', coords: [52.23, 21.01] },
       destination: { id: '8103000', name: 'Wien Hbf', coords: [48.19, 16.38] },
       departure: '2025-06-15T08:20:00+02:00',
       arrival: '2025-06-15T16:45:00+02:00',
@@ -47,7 +47,7 @@ const JOURNEY_TRANSFER = {
       lineName: 'ICE 43',
       lineProduct: 'nationalExpress',
       mode: 'train',
-      origin: { id: '5100067', name: 'Warszawa Centralna', coords: [52.23, 21.01] },
+      origin: { id: '5100065', name: 'Warszawa Centralna', coords: [52.23, 21.01] },
       destination: { id: '8011160', name: 'Berlin Hbf', coords: [52.53, 13.37] },
       departure: '2025-06-15T07:00:00+02:00',
       arrival: '2025-06-15T10:15:00+02:00',
@@ -148,14 +148,6 @@ describe('ConnectionList', () => {
     expect(screen.getByText('EC 144')).toBeInTheDocument()
   })
 
-  it('shows price when available', () => {
-    render(
-      <ConnectionList loading={false} journeys={[JOURNEY_DIRECT]} onSelectJourney={vi.fn()} />
-    )
-    expect(screen.getByText(/89/)).toBeInTheDocument()
-    expect(screen.getByText(/EUR/)).toBeInTheDocument()
-  })
-
   it('highlights selected journey card', () => {
     render(
       <ConnectionList
@@ -168,6 +160,79 @@ describe('ConnectionList', () => {
     const cards = screen.getAllByTestId('journey-card')
     expect(cards[1]).toHaveClass('journey-card--selected')
     expect(cards[0]).not.toHaveClass('journey-card--selected')
+  })
+})
+
+// ═════════════════════════════════════════════════════════════
+// ConnectionList — price display
+// ═════════════════════════════════════════════════════════════
+describe('ConnectionList — price display', () => {
+  it('shows price amount and currency when price is available', () => {
+    render(
+      <ConnectionList loading={false} journeys={[JOURNEY_DIRECT]} onSelectJourney={vi.fn()} />
+    )
+    const priceEl = screen.getByTestId('price-known')
+    expect(priceEl).toBeInTheDocument()
+    expect(priceEl).toHaveTextContent('89')
+    expect(priceEl).toHaveTextContent('EUR')
+  })
+
+  it('shows "Cena od" label when price is known', () => {
+    render(
+      <ConnectionList loading={false} journeys={[JOURNEY_DIRECT]} onSelectJourney={vi.fn()} />
+    )
+    expect(screen.getByTestId('price-known')).toHaveTextContent('Cena od')
+  })
+
+  it('shows "sprawdź u przewoźnika" when price is null', () => {
+    render(
+      <ConnectionList loading={false} journeys={[JOURNEY_TRANSFER]} onSelectJourney={vi.fn()} />
+    )
+    const priceEl = screen.getByTestId('price-unknown')
+    expect(priceEl).toBeInTheDocument()
+    expect(priceEl).toHaveTextContent('sprawdź u przewoźnika')
+  })
+
+  it('price-unknown element has correct data-testid', () => {
+    render(
+      <ConnectionList loading={false} journeys={[JOURNEY_TRANSFER]} onSelectJourney={vi.fn()} />
+    )
+    expect(screen.getByTestId('price-unknown')).toBeInTheDocument()
+  })
+
+  it('renders both price-known and price-unknown when journeys have mixed prices', () => {
+    render(
+      <ConnectionList
+        loading={false}
+        journeys={[JOURNEY_DIRECT, JOURNEY_TRANSFER]}
+        onSelectJourney={vi.fn()}
+      />
+    )
+    expect(screen.getByTestId('price-known')).toBeInTheDocument()
+    expect(screen.getByTestId('price-unknown')).toBeInTheDocument()
+  })
+
+  it('price section is present in every journey card', () => {
+    render(
+      <ConnectionList
+        loading={false}
+        journeys={[JOURNEY_DIRECT, JOURNEY_TRANSFER]}
+        onSelectJourney={vi.fn()}
+      />
+    )
+    // Each card must have either price-known or price-unknown
+    const known = screen.getAllByTestId('price-known')
+    const unknown = screen.getAllByTestId('price-unknown')
+    expect(known.length + unknown.length).toBe(2)
+  })
+
+  it('displays correct numeric price value', () => {
+    const journey = { ...JOURNEY_DIRECT, price: { amount: 129.50, currency: 'PLN' } }
+    render(
+      <ConnectionList loading={false} journeys={[journey]} onSelectJourney={vi.fn()} />
+    )
+    expect(screen.getByTestId('price-known')).toHaveTextContent('129.5')
+    expect(screen.getByTestId('price-known')).toHaveTextContent('PLN')
   })
 })
 
@@ -277,6 +342,20 @@ describe('SearchPanel', () => {
     expect(chip).toHaveClass('via-chip--active')
   })
 
+  it('inactive via chip does not have --active class', () => {
+    const viaCity = THREE_SEAS_CAPITALS[3]
+    render(
+      <SearchPanel
+        {...defaultProps}
+        selectedFrom={THREE_SEAS_CAPITALS[0]}
+        selectedTo={THREE_SEAS_CAPITALS[1]}
+        viaStations={[]}
+      />
+    )
+    const chip = document.querySelector(`[data-testid="via-chip-${viaCity.hafasId}"]`)
+    expect(chip).not.toHaveClass('via-chip--active')
+  })
+
   it('shows loading text on search button when loading=true', () => {
     render(
       <SearchPanel
@@ -317,61 +396,42 @@ describe('SearchPanel', () => {
     expect(screen.getByText(new RegExp(via.name))).toBeInTheDocument()
   })
 
-  it('auto-via chip has via-chip--auto and via-chip--active classes', () => {
-    const autoCity = THREE_SEAS_CAPITALS[3]
+  it('does not show via-selected section when no via stations', () => {
     render(
       <SearchPanel
         {...defaultProps}
         selectedFrom={THREE_SEAS_CAPITALS[0]}
         selectedTo={THREE_SEAS_CAPITALS[1]}
-        viaStations={[{ id: autoCity.hafasId, name: autoCity.name, auto: true }]}
+        viaStations={[]}
       />
     )
-    const chip = document.querySelector(`[data-testid="via-chip-${autoCity.hafasId}"]`)
-    expect(chip).toHaveClass('via-chip--auto')
-    expect(chip).toHaveClass('via-chip--active')
+    expect(screen.queryByTestId('via-selected')).toBeNull()
   })
 
-  it('manual via chip does not have via-chip--auto class', () => {
-    const manualCity = THREE_SEAS_CAPITALS[3]
+  it('no auto-via chips exist (auto-via feature removed)', () => {
     render(
       <SearchPanel
         {...defaultProps}
         selectedFrom={THREE_SEAS_CAPITALS[0]}
         selectedTo={THREE_SEAS_CAPITALS[1]}
-        viaStations={[{ id: manualCity.hafasId, name: manualCity.name, auto: false }]}
+        viaStations={[{ id: THREE_SEAS_CAPITALS[3].hafasId, name: THREE_SEAS_CAPITALS[3].name }]}
       />
     )
-    const chip = document.querySelector(`[data-testid="via-chip-${manualCity.hafasId}"]`)
-    expect(chip).not.toHaveClass('via-chip--auto')
-    expect(chip).toHaveClass('via-chip--active')
+    // auto class must not appear on any chip
+    const autoChips = document.querySelectorAll('.via-chip--auto')
+    expect(autoChips.length).toBe(0)
   })
 
-  it('shows EU-routing hint when auto-via stations are present', () => {
-    const autoCity = THREE_SEAS_CAPITALS[3]
+  it('no EU-routing hint element (auto-via feature removed)', () => {
     render(
       <SearchPanel
         {...defaultProps}
         selectedFrom={THREE_SEAS_CAPITALS[0]}
         selectedTo={THREE_SEAS_CAPITALS[1]}
-        viaStations={[{ id: autoCity.hafasId, name: autoCity.name, auto: true }]}
+        viaStations={[]}
       />
     )
-    expect(screen.getByTestId('auto-via-hint')).toBeInTheDocument()
-  })
-
-  it('shows EU badge inside auto-via chip', () => {
-    const autoCity = THREE_SEAS_CAPITALS[3]
-    render(
-      <SearchPanel
-        {...defaultProps}
-        selectedFrom={THREE_SEAS_CAPITALS[0]}
-        selectedTo={THREE_SEAS_CAPITALS[1]}
-        viaStations={[{ id: autoCity.hafasId, name: autoCity.name, auto: true }]}
-      />
-    )
-    const chip = document.querySelector(`[data-testid="via-chip-${autoCity.hafasId}"]`)
-    expect(chip.querySelector('.via-chip__badge')).not.toBeNull()
+    expect(screen.queryByTestId('auto-via-hint')).toBeNull()
   })
 })
 

@@ -34,6 +34,25 @@ function TransferArrow({ stop }) {
   )
 }
 
+function PriceDisplay({ price }) {
+  if (price) {
+    return (
+      <div className="journey-price journey-price--known" data-testid="price-known">
+        <span className="journey-price__label">Cena od</span>
+        <span className="journey-price__amount">
+          {price.amount} {price.currency}
+        </span>
+      </div>
+    )
+  }
+  return (
+    <div className="journey-price journey-price--unknown" data-testid="price-unknown">
+      <span className="journey-price__label">Cena:</span>
+      <span className="journey-price__na">sprawdź u przewoźnika</span>
+    </div>
+  )
+}
+
 function JourneyCard({ journey, isSelected, onClick }) {
   const dep = formatTime(journey.departure)
   const arr = formatTime(journey.arrival)
@@ -72,11 +91,7 @@ function JourneyCard({ journey, isSelected, onClick }) {
         ))}
       </div>
 
-      {journey.price && (
-        <div className="journey-price">
-          od {journey.price.amount} {journey.price.currency}
-        </div>
-      )}
+      <PriceDisplay price={journey.price} />
     </div>
   )
 }

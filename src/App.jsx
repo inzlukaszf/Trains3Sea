@@ -1,10 +1,9 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import TrainMap from './components/TrainMap'
 import SearchPanel from './components/SearchPanel'
 import ConnectionList from './components/ConnectionList'
 import { findJourneys } from './services/trainApi'
-import { THREE_SEAS_CAPITALS, CAPITAL_BY_HAFAS_ID } from './data/capitals'
-import { computeAutoVia } from './data/routeGraph'
+import { THREE_SEAS_CAPITALS } from './data/capitals'
 import './App.css'
 
 function localDatetimeNow() {
@@ -14,17 +13,15 @@ function localDatetimeNow() {
 }
 
 /** Build a viaStation entry from a capital object */
-function capitalToVia(city, auto = false) {
-  return { id: city.hafasId, name: city.name, coords: city.coords, auto }
+function capitalToVia(city) {
+  return { id: city.hafasId, name: city.name, coords: city.coords }
 }
 
 export default function App() {
   const [selectedFrom, setSelectedFrom] = useState(null)
   const [selectedTo, setSelectedTo] = useState(null)
 
-  // viaStations entries: { id, name, coords, auto }
-  // auto=true  → added by the geographic EU-route algorithm
-  // auto=false → added manually by the user
+  // viaStations entries: { id, name, coords }
   const [viaStations, setViaStations] = useState([])
   const [departure, setDeparture] = useState(localDatetimeNow)
 
@@ -32,32 +29,6 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [selectedJourney, setSelectedJourney] = useState(null)
-
-  // ── Auto-via: recompute whenever from/to changes ───────────────────────
-  useEffect(() => {
-    if (!selectedFrom || !selectedTo) {
-      setViaStations((prev) => prev.filter((v) => !v.auto))
-      return
-    }
-
-    const autoIds = computeAutoVia(selectedFrom.hafasId, selectedTo.hafasId)
-
-    setViaStations((prev) => {
-      const manual = prev.filter(
-        (v) =>
-          !v.auto &&
-          v.id !== selectedFrom.hafasId &&
-          v.id !== selectedTo.hafasId
-      )
-      const manualIds = new Set(manual.map((v) => v.id))
-      const autoVia = autoIds
-        .filter((id) => !manualIds.has(id))
-        .map((id) => capitalToVia(CAPITAL_BY_HAFAS_ID[id], true))
-        .filter(Boolean)
-
-      return [...autoVia, ...manual]
-    })
-  }, [selectedFrom, selectedTo])
 
   // ── Capital click on map — cycle: from → to ────────────────────────────
   const handleCapitalClick = useCallback((city) => {
@@ -75,7 +46,7 @@ export default function App() {
       if (existing) {
         return prev.filter((v) => v.id !== city.hafasId)
       }
-      return [...prev, capitalToVia(city, false)]
+      return [...prev, capitalToVia(city)]
     })
   }, [])
 
