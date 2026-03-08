@@ -3,6 +3,7 @@ import TrainMap from './components/TrainMap'
 import SearchPanel from './components/SearchPanel'
 import ConnectionList from './components/ConnectionList'
 import { findJourneys } from './services/trainApi'
+import { enrichJourneysWithPrices } from './services/priceService'
 import { THREE_SEAS_CAPITALS } from './data/capitals'
 import './App.css'
 
@@ -61,11 +62,12 @@ export default function App() {
     try {
       const dep = departure ? new Date(departure) : new Date()
       const viaIds = viaStations.map((v) => v.id)
-      const results = await findJourneys(selectedFrom.hafasId, selectedTo.hafasId, {
+      let results = await findJourneys(selectedFrom.hafasId, selectedTo.hafasId, {
         departure: dep,
         results: 5,
         viaIds,
       })
+      results = await enrichJourneysWithPrices(results, selectedFrom.hafasId, selectedTo.hafasId)
       setJourneys(results)
       if (results.length > 0) setSelectedJourney(results[0])
     } catch (err) {
