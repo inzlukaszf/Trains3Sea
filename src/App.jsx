@@ -4,7 +4,9 @@ import SearchPanel from './components/SearchPanel'
 import ConnectionList from './components/ConnectionList'
 import { findJourneys } from './services/trainApi'
 import { enrichJourneysWithPrices } from './services/priceService'
-import { THREE_SEAS_CAPITALS } from './data/capitals'
+import { EU_CAPITALS } from './data/capitals'
+
+const RAIL_CAPITALS = EU_CAPITALS.filter((c) => c.hasRailNetwork)
 import './App.css'
 
 function localDatetimeNow() {
@@ -103,7 +105,7 @@ export default function App() {
 
       <main className="map-area">
         <TrainMap
-          capitals={THREE_SEAS_CAPITALS}
+          capitals={RAIL_CAPITALS}
           selectedFrom={selectedFrom}
           selectedTo={selectedTo}
           onCapitalClick={handleCapitalClick}

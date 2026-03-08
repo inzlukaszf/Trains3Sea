@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { THREE_SEAS_CAPITALS } from '../data/capitals'
+import { EU_CAPITALS } from '../data/capitals'
+
+const RAIL_CAPITALS = EU_CAPITALS.filter((c) => c.hasRailNetwork)
 
 export default function SearchPanel({
   selectedFrom,
@@ -22,7 +24,7 @@ export default function SearchPanel({
     setTimeout(() => setSwapping(false), 300)
   }
 
-  const availableVia = THREE_SEAS_CAPITALS.filter(
+  const availableVia = RAIL_CAPITALS.filter(
     (c) =>
       c.hafasId !== selectedFrom?.hafasId &&
       c.hafasId !== selectedTo?.hafasId
@@ -43,12 +45,12 @@ export default function SearchPanel({
             id="from-select"
             value={selectedFrom?.hafasId || ''}
             onChange={(e) => {
-              const city = THREE_SEAS_CAPITALS.find((c) => c.hafasId === e.target.value)
+              const city = RAIL_CAPITALS.find((c) => c.hafasId === e.target.value)
               onFromChange(city || null)
             }}
           >
             <option value="">— wybierz stolicę —</option>
-            {THREE_SEAS_CAPITALS.map((c) => (
+            {RAIL_CAPITALS.map((c) => (
               <option key={c.hafasId} value={c.hafasId}>
                 {c.flag} {c.capital} ({c.country})
               </option>
@@ -72,12 +74,12 @@ export default function SearchPanel({
             id="to-select"
             value={selectedTo?.hafasId || ''}
             onChange={(e) => {
-              const city = THREE_SEAS_CAPITALS.find((c) => c.hafasId === e.target.value)
+              const city = RAIL_CAPITALS.find((c) => c.hafasId === e.target.value)
               onToChange(city || null)
             }}
           >
             <option value="">— wybierz stolicę —</option>
-            {THREE_SEAS_CAPITALS.map((c) => (
+            {RAIL_CAPITALS.map((c) => (
               <option key={c.hafasId} value={c.hafasId}>
                 {c.flag} {c.capital} ({c.country})
               </option>

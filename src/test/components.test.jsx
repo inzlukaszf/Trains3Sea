@@ -4,7 +4,9 @@ import userEvent from '@testing-library/user-event'
 import ConnectionList from '../components/ConnectionList'
 import SearchPanel from '../components/SearchPanel'
 import TrainMap from '../components/TrainMap'
-import { THREE_SEAS_CAPITALS } from '../data/capitals'
+import { EU_CAPITALS } from '../data/capitals'
+
+const THREE_SEAS_CAPITALS = EU_CAPITALS.filter((c) => c.hasRailNetwork)
 
 // ─────────────────────────────────────────────────────────────
 // Shared fixtures
@@ -308,9 +310,9 @@ describe('SearchPanel', () => {
         selectedTo={THREE_SEAS_CAPITALS[1]}
       />
     )
-    // 12 capitals total, minus 2 (from+to) = 10 via chips
+    // 25 rail capitals total, minus 2 (from+to) = 23 via chips
     const allChips = document.querySelectorAll('.via-chip')
-    expect(allChips.length).toBe(10)
+    expect(allChips.length).toBe(23)
   })
 
   it('calls onViaToggle when a via chip is clicked', async () => {
